@@ -1,6 +1,5 @@
 const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
-const yts = require("./yts.js");
 
 var express = require("express");
 var cors = require("cors");
@@ -42,6 +41,21 @@ app.get("/", function (request, response) {
 });
 
 app.post("/post", async function (request, response, next) {
+  let extra_options = {};
+  if (request.body.label !== "no-label") {
+    extra_options["label"] = request.body.label;
+  }
+  let magnet = request.body.magnet;
+  let is_success = await get_torrent(
+    magnet,
+    request.body.mediatype,
+    extra_options
+  );
+  if (is_success) response.status(200).send(`succesfully submitted ${magnet}`);
+  else response.sendStatus(400);
+});
+
+app.post("/yts", async function (request, response, next) {
   let extra_options = {};
   if (request.body.label !== "no-label") {
     extra_options["label"] = request.body.label;

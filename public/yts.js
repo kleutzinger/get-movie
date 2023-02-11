@@ -12,11 +12,7 @@ async function search_yts(fetch, query_term) {
   const endpoint_with_params = `${SEARCH_ENDPOINT}?${params}`;
   console.log(endpoint_with_params);
   const resp = await fetch(endpoint_with_params);
-  return handle_json(handle_json(await resp.json()));
+  return await resp.json();
 }
 
-function handle_json(json) {
-  1;
-}
-
-module.exports = { search_yts };
+// module.exports = { search_yts };

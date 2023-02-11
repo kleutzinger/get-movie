@@ -10,6 +10,12 @@
 </head>
 
 <body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tabulator/5.4.3/js/tabulator.min.js"
+        integrity="sha512-xu/xzHeJxvPLt6tuy68mvBtY4XCDpGmMe1AV4+S1viFUvy0Qygmoq1yePeDenRRNRSqYx3GvucTAnsGiO0FRaA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabulator/5.4.3/css/tabulator.min.css"
+        integrity="sha512-gHU0A38WiT7Jyubh7KcU6af64wRVBnNEB1541Ue5W050dRL/f21IWkAD8sl85nVjPyLnbffiXsCborGDQ55bYQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
     <form action="/post" method="post">
         <p>input a torrent link / magnet below</p>
         <p>it'll start to download on our cloudbox</p>
@@ -31,11 +37,17 @@
         </select>
         <input type="submit" value="Submit">
     </form>
-
+    <form>
+        <input type="text" id="search-box">
+        <input type="submit" value="Search for torrents" onclick="search(); return false;">
+    </form>
+    <div id="example-table"></div>
     <br>
     <br>
-    <image src="batman-example.png" width="900px"></image>
+    <!-- <image src="batman-example.png" width="900px"></image> -->
 
+    <script src="./yts.js"></script>
+    <script src="./client.js"></script>
 </body>
 
 </html>
