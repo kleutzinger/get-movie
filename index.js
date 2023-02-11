@@ -1,5 +1,7 @@
 const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
+const yts = require("./yts.js");
+
 var express = require("express");
 var cors = require("cors");
 require("dotenv").config();
@@ -15,17 +17,24 @@ app.use(cors());
 
 async function get_torrent(magnet_url, dir_path, extra_options = {}) {
   // initiate a torrent download on a remote server
-  r = await fetch(`${rutorrent_url}/php/addtorrent.php`, {
+  let endpoint = `${rutorrent_url}/php/addtorrent.php`;
+  let body = {
+    url: magnet_url,
+    dir_edit: dir_path,
+    ...extra_options,
+  };
+  console.log("posting:", endpoint, body);
+  let r = await fetch(endpoint, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: new URLSearchParams({
-      url: magnet_url,
-      dir_edit: dir_path,
-      ...extra_options,
-    }),
+    body: new URLSearchParams(body),
   });
+  console.log(r.status, r.statusText);
+  const text = await r.text();
+
+  return text.includes('"success"') && r.ok;
 }
 
 app.get("/", function (request, response) {
@@ -33,13 +42,18 @@ app.get("/", function (request, response) {
 });
 
 app.post("/post", async function (request, response, next) {
-  console.log(request.body);
   let extra_options = {};
   if (request.body.label !== "no-label") {
     extra_options["label"] = request.body.label;
   }
-  get_torrent(request.body.magnet, request.body.mediatype);
-  response.sendStatus(200);
+  let magnet = request.body.magnet;
+  let is_success = await get_torrent(
+    magnet,
+    request.body.mediatype,
+    extra_options
+  );
+  if (is_success) response.status(200).send(`succesfully submitted ${magnet}`);
+  else response.sendStatus(400);
 });
 
 app.listen(app.get("port"), function () {
