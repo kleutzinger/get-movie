@@ -10,6 +10,23 @@
 </head>
 
 <body>
+    <script type="module">
+        import { h, Component, render } from 'https://unpkg.com/preact?module';
+        import htm from 'https://unpkg.com/htm?module';
+
+        // Initialize htm with Preact
+        const html = htm.bind(h);
+        const l = [12, 3, 44,]
+        function ListEl(props) {
+            return html`<div>${props.value} ${props.value == 12 ? 'a' : 'b'} <a href=></a> </div>`
+        }
+
+        function App(props) {
+            return html`<h1>Hello ${props.list.map((e => { return html`<${ListEl} value=${e}/>` }))}!</h1>`;
+        }
+
+        render(html`<${App} name="World" list=${l} />`, document.getElementById("preact"));
+    </script>
     <form action="/post" method="post">
         <p>input a torrent link / magnet below</p>
         <p>it'll start to download on our cloudbox</p>
@@ -31,6 +48,7 @@
         </select>
         <input type="submit" value="Submit">
     </form>
+    <div id="preact"></div>
 
     <br>
     <br>
