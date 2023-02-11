@@ -20,7 +20,7 @@
         <p>input a torrent link / magnet below</p>
         <p>it'll start to download on our cloudbox</p>
         <p>easiest place to get torrent links is here <a href="https://yts.mx/">yts.mx</a></p>
-        <input type="text" id="magnet" name="magnet">
+        <input type="text" id="magnet" name="magnet" placeholder="manual magnet link here">
         <select name="mediatype" id="mediatype">
             <option value="/mnt/shared/media/movies">Movie</option>
             <option value="/mnt/shared/media/tvshows">TV Show</option>
@@ -35,11 +35,11 @@
             <option>matt</option>
             <option value="viewing club">viewing club</option>
         </select>
-        <input type="submit" value="Submit">
+        <input type="submit" value="Submit" id="submit">
     </form>
     <form>
-        <input type="text" id="search-box">
-        <input type="submit" value="Search for torrents" onclick="search(); return false;">
+        <input type="text" id="search-box" placeholder="search for a movie title">
+        <input type="submit" value="Search for movies" onclick="search(); return false;">
     </form>
     <div id="example-table"></div>
     <br>

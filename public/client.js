@@ -4,7 +4,18 @@ function genColumns() {
   return [
     { title: "title", field: "title" },
     { title: "year", field: "year" },
-    { title: "torrents", field: "torrents" },
+    // { title: "torrents", field: "torrents" },
+    { title: "download", field: "download", formatter: "html" },
+    {
+      title: "image",
+      field: "image",
+      formatter: "image",
+      formatterParams: {
+        height: "100px",
+        // urlPrefix: "http://website.com/images/",
+        // urlSuffix: ".png",
+      },
+    },
   ];
 }
 function makeTable(data) {
@@ -20,13 +31,27 @@ function makeTable(data) {
     layoutColumnsOnNewData: true,
     // layout: "fitData",
     // layout      : 'fitColumns',
-    initialSort: [
-      // set the initial sort order of the data
-      { column: "order", dir: "asc" },
-    ],
+    // initialSort: [
+    //   // set the initial sort order of the data
+    //   { column: "order", dir: "desc" },
+    // ],
   });
 
   return table;
+}
+
+function autosubmit(t_url) {
+  document.getElementById("magnet").value = t_url;
+  let submit_button = document.querySelector("#submit");
+  submit_button.click();
+}
+
+function torrent_to_button_html(torrent) {
+  console.log(torrent);
+  const { quality, type, url, size } = torrent;
+  return `<button onClick ="autosubmit('${url}')">${[quality, type, size].join(
+    " "
+  )}</button>`;
 }
 
 function trim_json(json) {
@@ -35,11 +60,13 @@ function trim_json(json) {
   const isHD = (t) =>
     t["quality"].includes("720") || t["quality"].includes("1080");
   let trimmed = movies.map((m) => {
+    let torrents = m.torrents;
     return {
       title: m.title,
-      torrents: m.torrents.filter(isHD),
+      torrents: torrents,
       year: m.year,
-      dl: "<p>dl</p>",
+      download: torrents.map(torrent_to_button_html).join(" "),
+      image: m.small_cover_image,
     };
   });
 
