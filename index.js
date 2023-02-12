@@ -75,11 +75,3 @@ app.post("/yts", async function (request, response, next) {
 app.listen(app.get("port"), function () {
   console.log("Node app is running at localhost:" + app.get("port"));
 });
-`
-    resp = requests.request(
-        method="POST",
-        url=f"{RUTORRENT_URL}/php/addtorrent.php?dir_edit={directory}&label={label}",
-        data={"url": magnet},
-        verify=True,
-    )
-`;
