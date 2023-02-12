@@ -19,6 +19,7 @@ function genColumns() {
         height: "100px",
       },
     },
+    { field: "info", title: "info", formatter: "html" },
   ];
 }
 function makeTable(data) {
@@ -59,6 +60,11 @@ function transform_api_response(api_json) {
   }
   const isHD = (t) =>
     t["quality"].includes("720") || t["quality"].includes("1080");
+  const gen_info = (m) => {
+    let source = `<a href="${m.url}">source</a>`;
+    let imdb = `<a href="https://www.imdb.com/title/${m.imdb_code}/">imdb (${m.rating})</a>`;
+    return [source, imdb].join("<br>");
+  };
   let trimmed = movies.map((m) => {
     let torrents = m.torrents;
     return {
@@ -67,6 +73,7 @@ function transform_api_response(api_json) {
       year: m.year,
       download: torrents.map(torrent_to_button_html).join(" "),
       image: m.medium_cover_image,
+      info: gen_info(m),
     };
   });
 
@@ -85,4 +92,10 @@ async function search() {
 
 document.addEventListener("DOMContentLoaded", function (event) {
   search();
+  let hash = window.location.hash;
+  if (hash) {
+    // set label to whatever the hash is
+    // i.e. "kevin"
+    document.getElementById("label").value = hash.replace("#", "");
+  }
 });

@@ -59,7 +59,7 @@ app.post("/post", async function (request, response, next) {
 
 app.post("/yts", async function (request, response, next) {
   let extra_options = {};
-  if (request.body.label !== "no-label") {
+  if (request.body.label && request.body.label !== "no-label") {
     extra_options["label"] = request.body.label;
   }
   let magnet = request.body.magnet;

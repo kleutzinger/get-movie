@@ -11,7 +11,6 @@ async function search_yts(fetch, query_term, is_rand_page) {
     // could do peers to approximate current popularity
     sort_by: "download_count",
     limit: 25,
-    with_rt_ratings: true,
     page: page,
   });
   const endpoint_with_params = `${SEARCH_ENDPOINT}?${params}`;
