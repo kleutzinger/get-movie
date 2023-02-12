@@ -5,15 +5,13 @@ function genColumns() {
     { title: "title", field: "title" },
     { title: "year", field: "year" },
     // { title: "torrents", field: "torrents" },
-    { title: "download", field: "download", formatter: "html" },
+    { title: "initiate download", field: "download", formatter: "html" },
     {
       title: "image",
       field: "image",
       formatter: "image",
       formatterParams: {
         height: "100px",
-        // urlPrefix: "http://website.com/images/",
-        // urlSuffix: ".png",
       },
     },
   ];
@@ -21,42 +19,37 @@ function genColumns() {
 function makeTable(data) {
   let table = new Tabulator("#example-table", {
     data: data, //assign data to table
-    resizableColumns: "header",
     columns: genColumns(),
     responsiveLayout: "collapse", // collapse columns that no longer fit on the table into a list under the row
-    columnMinWidth: 1,
-    virtualDom: true,
-    cellVertAlign: "middle",
-    cellHozAlign: "center",
     layoutColumnsOnNewData: true,
     // layout: "fitData",
-    // layout      : 'fitColumns',
-    // initialSort: [
-    //   // set the initial sort order of the data
-    //   { column: "order", dir: "desc" },
-    // ],
   });
 
   return table;
 }
 
 function autosubmit(t_url) {
+  // populate and submit the post request form at the top of the page
   document.getElementById("magnet").value = t_url;
   let submit_button = document.querySelector("#submit");
   submit_button.click();
 }
 
 function torrent_to_button_html(torrent) {
-  console.log(torrent);
+  // turn a torrent dict into a download button in the table
   const { quality, type, url, size } = torrent;
   return `<button onClick ="autosubmit('${url}')">${[quality, type, size].join(
-    " "
+    "<br>"
   )}</button>`;
 }
 
-function trim_json(json) {
-  let movies = json.data.movies;
-  console.log(Object.keys(movies[0]));
+function transform_api_response(api_json) {
+  // take the api response (list of movies) and turn it into
+  // data that the table can understand nicely
+  let movies = api_json.data.movies;
+  if (!movies) {
+    return [];
+  }
   const isHD = (t) =>
     t["quality"].includes("720") || t["quality"].includes("1080");
   let trimmed = movies.map((m) => {
@@ -66,7 +59,7 @@ function trim_json(json) {
       torrents: torrents,
       year: m.year,
       download: torrents.map(torrent_to_button_html).join(" "),
-      image: m.small_cover_image,
+      image: m.medium_cover_image,
     };
   });
 
@@ -74,11 +67,13 @@ function trim_json(json) {
 }
 
 async function search() {
-  var query = document.getElementById("search-box").value;
-  // Perform the search with the query here
+  // search for a movie and write to the table
+  let search_query = document.getElementById("search-box").value;
 
-  let tabledata = await search_yts(fetch, query);
-  let trimmed = trim_json(tabledata);
-
-  let table = makeTable(trimmed);
+  let api_movie_list = await search_yts(fetch, search_query);
+  let table = makeTable(transform_api_response(api_movie_list));
 }
+
+document.addEventListener("DOMContentLoaded", function (event) {
+  search();
+});

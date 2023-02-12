@@ -1,9 +1,10 @@
+require("dotenv").config();
 const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
 var express = require("express");
 var cors = require("cors");
-require("dotenv").config();
+var emojiFavicon = require("emoji-favicon");
 var app = express();
 // create application/json parser
 var bodyParser = require("body-parser");
@@ -13,6 +14,7 @@ app.set("port", process.env.PORT || 5000);
 app.use(express.static(__dirname + "/public"));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors());
+app.use(emojiFavicon("cinema"));
 
 async function get_torrent(magnet_url, dir_path, extra_options = {}) {
   // initiate a torrent download on a remote server
@@ -22,7 +24,7 @@ async function get_torrent(magnet_url, dir_path, extra_options = {}) {
     dir_edit: dir_path,
     ...extra_options,
   };
-  console.log("posting:", endpoint, body);
+  console.log("posting body:", body);
   let r = await fetch(endpoint, {
     method: "POST",
     headers: {
@@ -30,8 +32,8 @@ async function get_torrent(magnet_url, dir_path, extra_options = {}) {
     },
     body: new URLSearchParams(body),
   });
-  console.log(r.status, r.statusText);
   const text = await r.text();
+  console.log(r.status, r.statusText, text);
 
   return text.includes('"success"') && r.ok;
 }

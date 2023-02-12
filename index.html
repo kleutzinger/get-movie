@@ -17,30 +17,39 @@
         integrity="sha512-gHU0A38WiT7Jyubh7KcU6af64wRVBnNEB1541Ue5W050dRL/f21IWkAD8sl85nVjPyLnbffiXsCborGDQ55bYQ=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
     <form action="/post" method="post">
-        <p>input a torrent link / magnet below</p>
-        <p>it'll start to download on our cloudbox</p>
-        <p>easiest place to get torrent links is here <a href="https://yts.mx/">yts.mx</a></p>
+        <h2>torrent getter</h2>
+        <p>Click a button in the table below, or manually input a magnet link</p>
+        <p>After a few minutes, it should be available on our jellyfin, emby, or plex instances </p>
         <input type="text" id="magnet" name="magnet" placeholder="manual magnet link here">
         <select name="mediatype" id="mediatype">
-            <option value="/mnt/shared/media/movies">Movie</option>
-            <option value="/mnt/shared/media/tvshows">TV Show</option>
-            <option value="/mnt/shared/media/torrents">General Torrent</option>
+            <option value="/mnt/shared/media/movies">Movie Directory</option>
+            <option value="/mnt/shared/media/tvshows">TV Show Directory</option>
+            <option value="/mnt/shared/media/torrents">General Torrent Directory</option>
         </select>
-        <label for="mediatype">(mediatype)</label>
+        <label for="mediatype">&#8592;savedir</label>
         <select name="label" id="label">
             <option value="no-label">no-label</option>
             <option>kevin</option>
             <option>harrison</option>
             <option>jodizzle</option>
+            <option>aaron</option>
             <option>matt</option>
+            <option>i-am-so-leet</option>
             <option value="viewing club">viewing club</option>
         </select>
-        <input type="submit" value="Submit" id="submit">
+        <input type="submit" id="submit" value="Download torrent/link" class="bigtext">
+
     </form>
+    <h3>or</h3>
     <form>
         <input type="text" id="search-box" placeholder="search for a movie title">
-        <input type="submit" value="Search for movies" onclick="search(); return false;">
+        <input type="submit" class="bigtext" value="Search for movies" onclick="search(); return false;">
     </form>
+    <div class="right">
+        <a>[</a>
+        <a href="https://letterboxd.com/lists/">can't think of a movie?</a>
+        <a>]</a>
+    </div>
     <div id="example-table"></div>
     <br>
     <br>
@@ -48,6 +57,18 @@
 
     <script src="./yts.js"></script>
     <script src="./client.js"></script>
+    <style>
+        .bigtext {
+            color: darkblue;
+            font-weight: 800;
+        }
+
+        .right {
+            right: 0px;
+            text-align: right;
+        }
+
+    </style>
 </body>
 
 </html>
