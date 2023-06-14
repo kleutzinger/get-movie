@@ -80,6 +80,32 @@ function transform_api_response(api_json) {
   return trimmed;
 }
 
+async function get_disk_space_from_server() {
+  const endpoint = "/diskspace";
+  // fetch endpoint with get request
+  let response = await fetch(endpoint);
+  let json = await response.json();
+  return json;
+}
+
+function set_disk_space_in_ui(json) {
+  function formatBytes(a, b = 2) {
+    if (!+a) return "0 Bytes";
+    const c = 0 > b ? 0 : b,
+      d = Math.floor(Math.log(a) / Math.log(1024));
+    return `${parseFloat((a / Math.pow(1024, d)).toFixed(c))} ${
+      ["Bytes", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"][d]
+    }`;
+  }
+  const { total, free } = json;
+  //  add a div to the page with the free space
+  let free_space_div = document.getElementById("free-space");
+  const ratio = `${formatBytes(free)} / ${formatBytes(total)}`;
+  const percent_full = ((total - free) / total) * 100;
+  const percent_full_text = `${percent_full.toFixed(1)}% full`;
+  free_space_div.innerHTML = `free space remaining on disk: ${ratio} (${percent_full_text})`;
+}
+
 async function search() {
   // search for a movie and write to the table
   let search_query = document.getElementById("search-box").value;
@@ -90,7 +116,7 @@ async function search() {
   let table = makeTable(transform_api_response(api_movie_list));
 }
 
-document.addEventListener("DOMContentLoaded", function (event) {
+document.addEventListener("DOMContentLoaded", async function (event) {
   search();
   let hash = window.location.hash;
   if (hash) {
@@ -98,4 +124,5 @@ document.addEventListener("DOMContentLoaded", function (event) {
     // i.e. "kevin"
     document.getElementById("label").value = hash.replace("#", "");
   }
+  set_disk_space_in_ui(await get_disk_space_from_server());
 });

@@ -57,6 +57,14 @@ app.post("/post", async function (request, response, next) {
   else response.sendStatus(400);
 });
 
+// get available disk space from rutorrent
+app.get("/diskspace", async function (request, response, next) {
+  let endpoint = `${rutorrent_url}/plugins/diskspace/action.php`;
+  let r = await fetch(endpoint);
+  let json = await r.json();
+  response.json(json);
+});
+
 app.post("/yts", async function (request, response, next) {
   let extra_options = {};
   if (request.body.label && request.body.label !== "no-label") {
