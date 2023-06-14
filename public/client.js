@@ -81,11 +81,21 @@ function transform_api_response(api_json) {
 }
 
 async function get_disk_space_from_server() {
-  const endpoint = "/diskspace";
+  const endpoint = new URL("/diskspace", window.location.href).href;
   // fetch endpoint with get request
   let response = await fetch(endpoint);
   let json = await response.json();
   return json;
+}
+
+async function write_rutorrent_url_to_ui() {
+  const endpoint = new URL("/rutorrent-url", window.location.href).href;
+  // fetch endpoint with get request
+  let response = await fetch(endpoint);
+  let json = await response.json();
+  const url = json.url;
+  let rutorrent_url_div = document.getElementById("rutorrent-url");
+  rutorrent_url_div.innerHTML = `<a href="${url}">rutorrent url</a>`;
 }
 
 function set_disk_space_in_ui(json) {
@@ -123,6 +133,11 @@ document.addEventListener("DOMContentLoaded", async function (event) {
     // set label to whatever the hash is
     // i.e. "kevin"
     document.getElementById("label").value = hash.replace("#", "");
+  }
+  try {
+    await write_rutorrent_url_to_ui();
+  } catch (e) {
+    console.error(e);
   }
   set_disk_space_in_ui(await get_disk_space_from_server());
 });

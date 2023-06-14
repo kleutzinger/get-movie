@@ -65,6 +65,10 @@ app.get("/diskspace", async function (request, response, next) {
   response.json(json);
 });
 
+app.get("/rutorrent-url", async function (request, response, next) {
+  response.json({ url: rutorrent_url });
+});
+
 app.post("/yts", async function (request, response, next) {
   let extra_options = {};
   if (request.body.label && request.body.label !== "no-label") {
