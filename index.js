@@ -2,6 +2,17 @@ require("dotenv").config();
 const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
+const { auth, requiresAuth } = require('express-openid-connect');
+
+const authConfig = {
+  authRequired: true,
+  auth0Logout: true,
+  secret: process.env.AUTH0_SECRET,
+  baseURL: `http://localhost:${process.env.PORT || 5000}`,
+  clientID: 'Zhkmi6s8yM6SrabmoxJxRpDNmMgefknw',
+  issuerBaseURL: 'https://dev-4gfidufu1t4at7rq.us.auth0.com'
+};
+
 var express = require("express");
 var cors = require("cors");
 var emojiFavicon = require("emoji-favicon");
@@ -9,6 +20,24 @@ var app = express();
 // create application/json parser
 var bodyParser = require("body-parser");
 var rutorrent_url = process.env.RUTORRENT_URL;
+
+
+// auth router attaches /login, /logout, and /callback routes to the baseURL
+app.use(auth(authConfig));
+
+// req.isAuthenticated is provided from the auth router
+app.get('/', (req, res) => {
+  res.send(req.oidc.isAuthenticated() ? 'Logged in' : 'Logged out');
+});
+
+app.get('/a', (req, res) => {
+  res.send(req.oidc.isAuthenticated() ? 'Logged in' : 'Logged out');
+});
+
+app.get('/profile', requiresAuth(), (req, res) => {
+  res.send(JSON.stringify(req.oidc.user));
+  // res.json(req.oidc);
+});
 
 app.set("port", process.env.PORT || 5000);
 app.use(express.static(__dirname + "/public"));
