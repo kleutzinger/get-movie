@@ -81,11 +81,15 @@ function transform_api_response(api_json) {
 }
 
 async function get_disk_space_from_server() {
-  const endpoint = new URL("/diskspace", window.location.href).href;
-  // fetch endpoint with get request
-  let response = await fetch(endpoint);
-  let json = await response.json();
-  return json;
+  try {
+    const endpoint = new URL("/diskspace", window.location.href).href;
+    const response = await fetch(endpoint);
+    const json = await response.json();
+    return json;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
 }
 
 async function write_rutorrent_url_to_ui() {
@@ -99,6 +103,9 @@ async function write_rutorrent_url_to_ui() {
 }
 
 function set_disk_space_in_ui(json) {
+  if (!json) {
+    return;
+  }
   function formatBytes(a, b = 2) {
     if (!+a) return "0 Bytes";
     const c = 0 > b ? 0 : b,
@@ -128,6 +135,17 @@ async function search() {
 
 document.addEventListener("DOMContentLoaded", async function (event) {
   search();
+  // persist label from <select> in localstorage
+  let cached_label = localStorage.getItem("label");
+  if (cached_label) {
+    document.getElementById("label").value = cached_label;
+  }
+
+  // set label when the label input changes
+  document.getElementById("label").addEventListener("change", (e) => {
+    localStorage.setItem("label", e.target.value);
+  });
+
   let hash = window.location.hash;
   if (hash) {
     // set label to whatever the hash is

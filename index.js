@@ -58,11 +58,16 @@ app.post("/post", async function (request, response, next) {
 });
 
 // get available disk space from rutorrent
-app.get("/diskspace", async function (request, response, next) {
-  let endpoint = `${rutorrent_url}/plugins/diskspace/action.php`;
-  let r = await fetch(endpoint);
-  let json = await r.json();
-  response.json(json);
+app.get("/diskspace", async function (request, response) {
+  try {
+    const endpoint = `${rutorrent_url}/plugins/diskspace/action.php`;
+    const result = await fetch(endpoint);
+    const data = await result.json();
+    response.json(data);
+  } catch (error) {
+    console.error(error);
+    response.status(500).send("Internal Server Error");
+  }
 });
 
 app.get("/rutorrent-url", async function (request, response, next) {
