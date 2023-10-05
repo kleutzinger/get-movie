@@ -14,10 +14,11 @@
     "emoji-favicon": "^0.3.0",
     "express": "^4.13.3",
     "node-fetch": "^3.3.0",
-    "nodemon": "^2.0.20"
+    "nodemon": "^3.0.1",
+    "snowfl-api": "^1.0.2"
   },
   "engines": {
-    "node": "18.x"
+    "node": "20.x"
   },
   "repository": {
     "type": "git",
