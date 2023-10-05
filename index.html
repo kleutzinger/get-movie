@@ -18,27 +18,31 @@
 </head>
 
 <body>
+    <script src="https://unpkg.com/htmx.org@1.9.6"></script>
+  <script src="https://unpkg.com/htmx.org/dist/ext/response-targets.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tabulator/5.4.3/js/tabulator.min.js"
         integrity="sha512-xu/xzHeJxvPLt6tuy68mvBtY4XCDpGmMe1AV4+S1viFUvy0Qygmoq1yePeDenRRNRSqYx3GvucTAnsGiO0FRaA=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabulator/5.4.3/css/tabulator.min.css"
         integrity="sha512-gHU0A38WiT7Jyubh7KcU6af64wRVBnNEB1541Ue5W050dRL/f21IWkAD8sl85nVjPyLnbffiXsCborGDQ55bYQ=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <form action="/post" method="post">
+
         <h2>get-movie.kevbot.xyz</h2>
         <p>Click a button in the table below, or manually input a magnet link</p>
         <p>After a few minutes, it should be available on our jellyfin, emby, or plex instances </p>
         <p><a id="rutorrent-url"></a></p>
-        <div id="free-space"></div>
-        <input type="text" id="magnet" name="magnet" placeholder="manual magnet link here">
-        <select name="mediatype" id="mediatype">
+        <div>
+          Free space remaining on instance: <span id="free-space"></span>
+        </div>
+    <h2>Direct all downloads to which directory? (eg movie/tv/general):</h2>
+        <select form="main-form" name="mediatype" id="mediatype">
             <option value="/mnt/shared/media/movies">Movie Directory</option>
             <option value="/mnt/shared/media/tvshows">TV Show Directory</option>
             <option value="/mnt/shared/media/torrents">General Torrent Directory</option>
             <option value="/mnt/shared/media/roms/switch">Switch Games</option>
         </select>
-        <label for="mediatype">&#8592;savedir</label>
-        <select name="label" id="label">
+      <label for="label">with label:</label>
+        <select form="main-form" name="label" id="label">
             <option value="no-label">no-label</option>
             <option>kevin</option>
             <option>harrison</option>
@@ -48,10 +52,20 @@
             <option>i-am-so-leet</option>
             <option value="viewing club">viewing club</option>
         </select>
-        <input type="submit" id="submit" value="Download torrent/link" class="bigtext">
-
+    <form id="main-form" action="/post" method="post">
+        <h3>Manually input a magnet link (or a url to a torrent)</h3>
+        <input type="text" id="magnet" name="magnet" placeholder="manual magnet link here">
+        <input type="submit" id="submit" value="Download torrent/magnet link" class="bigtext">
     </form>
-    <h3>or</h3>
+    <h3>or search torrent aggregator (<a href="https://snowfl.com">snowfl.com</a>)</h3>
+    <form hx-post="/snowfl"  hx-swap="innerHTML" hx-target="#snowfl-output" hx-indicator="#spinner" hx-target-500="#snowfl-output">
+      <input required type="text" name="query" placeholder="search aggregator"></input>
+      <button>search</button>
+      <img  id="spinner" class="htmx-indicator" src="/bars.svg"/>
+    </form>
+    <div id="snowfl-output">
+    </div>
+    <h3>or search the movie table below (<a href="https://yts.mx">yts.mx</a>)</h3>
     <form>
         <input type="text" id="search-box" placeholder="search for a movie title">
         <input type="submit" class="bigtext" value="Search for movies" onclick="search(); return false;">
@@ -81,6 +95,16 @@
         .right {
             right: 0px;
             text-align: right;
+        }
+        .htmx-indicator{
+            opacity:0;
+            transition: opacity 250ms ease-in;
+        }
+        .htmx-request .htmx-indicator{
+            opacity:1
+        }
+        .htmx-request.htmx-indicator{
+            opacity:1
         }
     </style>
 </body>

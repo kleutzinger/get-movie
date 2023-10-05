@@ -5,6 +5,7 @@ const fetch = (...args) =>
 var express = require("express");
 var cors = require("cors");
 var emojiFavicon = require("emoji-favicon");
+const snowfl = require("./snowfl");
 var app = express();
 // create application/json parser
 var bodyParser = require("body-parser");
@@ -15,6 +16,7 @@ app.use(express.static(__dirname + "/public"));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors());
 app.use(emojiFavicon("cinema"));
+app.use("/snowfl", snowfl);
 
 async function get_torrent(magnet_url, dir_path, extra_options = {}) {
   // initiate a torrent download on a remote server
@@ -42,6 +44,10 @@ app.get("/", function (request, response) {
   response.sendFile(__dirname + "/index.html");
 });
 
+app.get("/empty", function (request, response) {
+  response.send("");
+});
+
 app.post("/post", async function (request, response, next) {
   let extra_options = {};
   if (request.body.label !== "no-label") {
@@ -51,7 +57,7 @@ app.post("/post", async function (request, response, next) {
   let is_success = await get_torrent(
     magnet,
     request.body.mediatype,
-    extra_options
+    extra_options,
   );
   if (is_success) response.status(200).send(`succesfully submitted ${magnet}`);
   else response.sendStatus(400);
@@ -83,7 +89,7 @@ app.post("/yts", async function (request, response, next) {
   let is_success = await get_torrent(
     magnet,
     request.body.mediatype,
-    extra_options
+    extra_options,
   );
   if (is_success) response.status(200).send(`succesfully submitted ${magnet}`);
   else response.sendStatus(400);

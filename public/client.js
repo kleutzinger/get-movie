@@ -46,7 +46,7 @@ function torrent_to_button_html(torrent) {
   // turn a torrent dict into a download button in the table
   const { quality, type, url, size } = torrent;
   return `<button onClick ="autosubmit('${url}')">${[quality, type, size].join(
-    "<br>"
+    "<br>",
   )}</button>`;
 }
 
@@ -116,11 +116,11 @@ function set_disk_space_in_ui(json) {
   }
   const { total, free } = json;
   //  add a div to the page with the free space
-  let free_space_div = document.getElementById("free-space");
+  let free_space_span = document.getElementById("free-space");
   const ratio = `${formatBytes(free)} / ${formatBytes(total)}`;
   const percent_full = ((total - free) / total) * 100;
   const percent_full_text = `${percent_full.toFixed(1)}% full`;
-  free_space_div.innerHTML = `free space remaining on disk: ${ratio} (${percent_full_text})`;
+  free_space_span.innerHTML = `${ratio} (${percent_full_text})`;
 }
 
 async function search() {
@@ -158,4 +158,17 @@ document.addEventListener("DOMContentLoaded", async function (event) {
     console.error(e);
   }
   set_disk_space_in_ui(await get_disk_space_from_server());
+});
+
+document.body.addEventListener("htmx:afterRequest", function (evt) {
+  const targetError = evt.target.attributes.getNamedItem("hx-target-error");
+  if (evt.detail.failed && targetError) {
+    document.getElementById(targetError.value).style.display = "inline";
+  }
+});
+document.body.addEventListener("htmx:beforeRequest", function (evt) {
+  const targetError = evt.target.attributes.getNamedItem("hx-target-error");
+  if (targetError) {
+    document.getElementById(targetError.value).style.display = "none";
+  }
 });
