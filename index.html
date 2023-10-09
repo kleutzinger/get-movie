@@ -35,14 +35,14 @@
           Free space remaining on instance: <span id="free-space"></span>
         </div>
     <h2>Direct all downloads to which directory? (eg movie/tv/general):</h2>
-        <select form="main-form" name="mediatype" id="mediatype">
+        <select form="main-form" name="mediatype" id="mediatype" class="biginput">
             <option value="/mnt/shared/media/movies">Movie Directory</option>
             <option value="/mnt/shared/media/tvshows">TV Show Directory</option>
             <option value="/mnt/shared/media/torrents">General Torrent Directory</option>
             <option value="/mnt/shared/media/roms/switch">Switch Games</option>
         </select>
-      <label for="label">with label:</label>
-        <select form="main-form" name="label" id="label">
+      <label class="biginput" for="label">with label:</label>
+        <select class="biginput" form="main-form" name="label" id="label">
             <option value="no-label">no-label</option>
             <option>kevin</option>
             <option>harrison</option>
@@ -55,20 +55,20 @@
     <form id="main-form" action="/post" method="post">
         <h3>Manually input a magnet link (or a url to a torrent)</h3>
         <input type="text" id="magnet" name="magnet" placeholder="manual magnet link here">
-        <input type="submit" id="submit" value="Download torrent/magnet link" class="bigtext">
+        <input type="submit" id="submit" value="Download torrent/magnet link" class="blue-text">
     </form>
     <h3>or search torrent aggregator (<a href="https://snowfl.com">snowfl.com</a>)</h3>
     <form hx-post="/snowfl"  hx-swap="innerHTML" hx-target="#snowfl-output" hx-indicator="#spinner" hx-target-500="#snowfl-output">
       <input required type="text" name="query" placeholder="search aggregator"></input>
-      <button>search</button>
+      <button class="blue-text">search</button>
       <img  id="spinner" class="htmx-indicator" src="/bars.svg"/>
     </form>
     <div id="snowfl-output">
     </div>
     <h3>or search the movie table below (<a href="https://yts.mx">yts.mx</a>)</h3>
     <form>
-        <input type="text" id="search-box" placeholder="search for a movie title">
-        <input type="submit" class="bigtext" value="Search for movies" onclick="search(); return false;">
+        <input type="text" id="search-box" placeholder="movie title or imdb id">
+        <input type="submit" class="blue-text" value="Search for yts movies" onclick="search(); return false;">
     </form>
     <div class="right">
         <a href="https://github.com/kleutzinger/get-movie">[source code]</a>
@@ -82,7 +82,7 @@
     <script src="./yts.js"></script>
     <script src="./client.js"></script>
     <style>
-        .bigtext {
+        .blue-text {
             color: darkblue;
             font-weight: bold;
         }
@@ -105,6 +105,9 @@
         }
         .htmx-request.htmx-indicator{
             opacity:1
+        }
+        .biginput {
+            font-size: 30px;
         }
     </style>
 </body>
