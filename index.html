@@ -31,6 +31,9 @@
         <p>Click a button in the table below, or manually input a magnet link</p>
         <p>After a few minutes, it should be available on our jellyfin, emby, or plex instances </p>
         <p><a id="rutorrent-url"></a></p>
+        <h2>Recent Downloads (Click table to refresh)</h2>
+        <p hx-get="/dl-status?limit=5" hx-trigger="load, every 20s, click" hx-swap="innerHTML" hx-indicator="#spinner-dl" hx-target-500="#dl-status">Latest Download Status</p>
+      <img  id="spinner-dl" class="htmx-indicator" src="/bars.svg"/>
         <div>
           Free space remaining on instance: <span id="free-space"></span>
         </div>
@@ -52,7 +55,8 @@
             <option>i-am-so-leet</option>
             <option value="viewing club">viewing club</option>
         </select>
-    <form id="main-form" action="/post" method="post">
+    <p id="post-output"></p>
+    <form id="main-form" hx-post="/post" hx-swap="innerHTML show:bottom" hx-target="#post-output" hx-indicator="#spinner">
         <h3>Manually input a magnet link (or a url to a torrent)</h3>
         <input type="text" id="magnet" name="magnet" placeholder="manual magnet link here">
         <input type="submit" id="submit" value="Download torrent/magnet link" class="blue-text">

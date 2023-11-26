@@ -13,4 +13,6 @@
 
 [x] populate with "random" movies (on empty search)
 [x] embolden titles
+[x] add polling download progress to ui
+[ ] add delete button to ui
 ```

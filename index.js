@@ -76,6 +76,85 @@ app.get("/diskspace", async function (request, response) {
   }
 });
 
+const exampleResponse = `
+{"items": [
+    {
+      "action": 2,
+      "name": "RCT2_Deluxe_Plus_OpenRCT2.iso",
+      "size": 606732288,
+      "downloaded": 606732288,
+      "uploaded": 0,
+      "ratio": 0,
+      "creation": 0,
+      "added": 1701039458,
+      "finished": 1701039502,
+      "tracker": "udp://a.bc.d:6969/announce",
+      "label": "kevin",
+      "action_time": 1701039502,
+      "hash": "f1ca51f4afa47f5bed33bf7102952105"
+    }, {}
+]}
+
+`;
+app.get("/dl-status", async function (request, response) {
+  try {
+    const limit = request.query.limit || 5;
+    const endpoint = `${rutorrent_url}/plugins/history/action.php?cmd=get&mark=0`;
+    const result = await fetch(endpoint);
+    const data = await result.json();
+    const sortedData = data.items
+      .sort((a, b) => b.added - a.added)
+      .sort((a, b) => b.action_time - a.action_time);
+    // keep only the most recent items by unique name
+    const uniqueNames = new Set();
+    const deletedNames = new Set();
+    const uniqueData = [];
+    for (const item of sortedData) {
+      if (item.action === 3) {
+        deletedNames.add(item.name);
+      }
+      if (!uniqueNames.has(item.name)) {
+        if (deletedNames.has(item.name)) {
+          continue;
+        }
+        uniqueNames.add(item.name);
+        uniqueData.push(item);
+      }
+    }
+    const content = uniqueData
+      .slice(0, limit)
+      .map((item) => {
+        const { name, size, downloaded, added, finished, hash } = item;
+        const shortHash = hash.substring(0, 8);
+        const sizeGB = (size / 1000000000).toFixed(2);
+        const dlStatus = finished == 0 ? "Started" : "Done";
+
+        // Calculate downloaded vs size percent
+        const downloadPercent = ((downloaded / size) * 100).toFixed(2);
+
+        return `<tr>
+              <td>${name.substring(0, 40)}</td>
+              <td>${sizeGB}GB</td>
+              <td>${dlStatus}</td>
+            </tr>`;
+      })
+      .join("\n");
+
+    const htmlTable = `<table>
+                    <tr>
+                      <th>Name</th>
+                      <th>Size</th>
+                      <th>DL Status</th>
+                    </tr>
+                    ${content}
+                  </table>`;
+    response.send(htmlTable);
+  } catch (error) {
+    console.error(error);
+    response.status(500).send("Internal Server Error");
+  }
+});
+
 app.get("/rutorrent-url", async function (request, response, next) {
   response.json({ url: rutorrent_url });
 });
@@ -96,5 +175,5 @@ app.post("/yts", async function (request, response, next) {
 });
 
 app.listen(app.get("port"), function () {
-  console.log("Node app is running at localhost:" + app.get("port"));
+  console.log("Node app is running at http://0.0.0.0:" + app.get("port"));
 });
