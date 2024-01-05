@@ -9,6 +9,7 @@ function genColumns() {
       cssClass: "titletext",
     },
     { title: "year", field: "year" },
+    { title: "runtime", field: "runtime" },
     // { title: "torrents", field: "torrents" },
     { title: "initiate download", field: "download", formatter: "html" },
     {
@@ -61,9 +62,10 @@ function transform_api_response(api_json) {
   const isHD = (t) =>
     t["quality"].includes("720") || t["quality"].includes("1080");
   const gen_info = (m) => {
-    let source = `<a href="${m.url}">source</a>`;
+    let source = `<a href="${m.url}">source (yts.mx)</a>`;
     let imdb = `<a href="https://www.imdb.com/title/${m.imdb_code}/">imdb (${m.rating})</a>`;
-    return [source, imdb].join("<br>");
+    let runtime = `<span>${m.runtime} minutes</span>`;
+    return [runtime, source, imdb].join("<br>");
   };
   let trimmed = movies.map((m) => {
     let torrents = m.torrents;
