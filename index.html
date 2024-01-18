@@ -29,8 +29,7 @@
 
         <h2>get-movie.kevbot.xyz</h2>
         <p>Click a button in the table below, or manually input a magnet link</p>
-        <p>After a few minutes, it should be available on our jellyfin, emby, or plex instances </p>
-        <p><a id="rutorrent-url"></a></p>
+        <p>After a few minutes, it should be available on our jellyfin, emby, or plex instances. &nbsp;<span id="rutorrent-url">rutorrent-url</span></p>
         <h2>Recent Downloads (Click table to refresh) <img  id="spinner-dl" class="htmx-indicator" src="/bars.svg"/></h2>
         <div hx-get="/dl-status?limit=5" hx-trigger="load, every 20s, click" hx-swap="innerHTML" hx-indicator="#spinner-dl" hx-target-500="#dl-status">
           <table>
