@@ -63,9 +63,11 @@ function transform_api_response(api_json) {
     t["quality"].includes("720") || t["quality"].includes("1080");
   const gen_info = (m) => {
     let source = `<a href="${m.url}">source (yts.mx)</a>`;
-    let imdb = `<a href="https://www.imdb.com/title/${m.imdb_code}/">imdb (${m.rating})</a>`;
+    let imdb = `<a href="https://www.imdb.com/title/${m.imdb_code}/">IMDB (${m.rating})</a>`;
+    let lbox = `<a href="https://letterboxd.com/imdb/${m.imdb_code}"/>Letterboxd</a>`;
+
     let runtime = `<span>${m.runtime} minutes</span>`;
-    return [runtime, source, imdb].join("<br>");
+    return [runtime, imdb, lbox, source].join("<br>");
   };
   let trimmed = movies.map((m) => {
     let torrents = m.torrents;

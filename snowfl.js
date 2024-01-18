@@ -59,9 +59,8 @@ async function search_to_table(query) {
     if (element.magnet == undefined) {
       element["dlbutton"] = no_magnet(element["url"]);
     }
-    element[
-      "source_link"
-    ] = `<a href="${element["url"]}">${element["name"]}</a>`;
+    element["source_link"] =
+      `<a href="${element["url"]}">${element["name"]}</a>`;
   });
   let keys = [
     // "magnet",
@@ -78,6 +77,9 @@ async function search_to_table(query) {
     "trusted",
     "nsfw",
   ];
+  if (jsonArray.length == 0) {
+    return "No results found";
+  }
   let hideButton = `<button hx-get="/empty" hx-target="#snowfl-output" hx-swap="innerHTML">(hide table)</button>`;
   let table = hideButton + jht(jsonArray, keys);
   return table;
