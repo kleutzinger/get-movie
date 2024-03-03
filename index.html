@@ -90,7 +90,7 @@
             <option value="viewing club">viewing club</option>
         </select>
     <p id="post-output"></p>
-    <form id="main-form" hx-post="/post" hx-swap="innerHTML show:bottom" hx-target="#post-output" hx-indicator="#spinner">
+    <form id="main-form" hx-post="/post" hx-swap="innerHTML" hx-target="#post-output" hx-indicator="#spinner">
         <h3>Manually input a magnet link (or a url to a torrent)</h3>
         <input type="text" id="magnet" name="magnet" placeholder="manual magnet link here">
         <input type="submit" id="submit" value="Download torrent/magnet link" class="blue-text">
