@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon start"
+    "build": "tailwindcss -i ./public/style.in.css -o ./public/style.css --minify",
+    "dev": "concurrently --raw \"npm:watch-node\" \"npm:watch-tailwind\"",
+    "watch-node": "nodemon start",
+    "watch-tailwind": "tailwindcss -i ./public/style.in.css -o ./public/style.css --watch"
   },
   "dependencies": {
     "body-parser": "^1.20.1",
@@ -16,24 +19,24 @@
     "json-html-table": "^2.0.1",
     "json2html": "^0.0.8",
     "node-fetch": "^3.3.0",
-    "nodemon": "^3.0.1",
     "snowfl-api": "^1.0.2"
   },
   "engines": {
     "node": "20.x"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/heroku/node-js-sample"
   },
   "keywords": [
     "node",
     "heroku",
     "express"
   ],
-  "author": "Mark Pundsack",
-  "contributors": [
-    "Zeke Sikelianos <zeke@sikelianos.com> (http://zeke.sikelianos.com)"
-  ],
-  "license": "MIT"
+  "author": "Kevin Leutzinger",
+  "license": "MIT",
+  "devDependencies": {
+    "@tailwindcss/forms": "^0.5.7",
+    "@tailwindcss/typography": "^0.5.10",
+    "concurrently": "^8.2.2",
+    "daisyui": "^4.7.2",
+    "nodemon": "^3.1.0",
+    "tailwindcss": "^3.4.1"
+  }
 }
