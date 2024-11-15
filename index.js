@@ -54,10 +54,14 @@ app.post("/post", async function (request, response, next) {
     extra_options["label"] = request.body.label;
   }
   let magnet = request.body.magnet;
+  // check if magnet is either a url or a magnet link
+  if (!magnet.startsWith("magnet:") && !magnet.startsWith("http")) {
+    return response.status(400).send("Invalid magnet link or url");
+  }
   let is_success = await get_torrent(
     magnet,
     request.body.mediatype,
-    extra_options,
+    extra_options
   );
   if (is_success) response.status(200).send(`succesfully submitted ${magnet}`);
   else response.sendStatus(400);
@@ -168,7 +172,7 @@ app.post("/yts", async function (request, response, next) {
   let is_success = await get_torrent(
     magnet,
     request.body.mediatype,
-    extra_options,
+    extra_options
   );
   if (is_success) response.status(200).send(`succesfully submitted ${magnet}`);
   else response.sendStatus(400);
