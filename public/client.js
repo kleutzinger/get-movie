@@ -138,6 +138,14 @@ async function search() {
 }
 
 document.addEventListener("DOMContentLoaded", async function (event) {
+  // check if param of ?yts-search=... exists and pre-fill the value
+  const url = new URL(window.location.href);
+  const search_param = url.searchParams.get("yts-search");
+  if (search_param) {
+    document.getElementById("search-box").value = search_param;
+    // scroll into view
+    document.getElementById("search-box").scrollIntoView();
+  }
   search();
   // persist label from <select> in localstorage
   let cached_label = localStorage.getItem("label");
