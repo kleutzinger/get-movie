@@ -62,7 +62,7 @@ function transform_api_response(api_json) {
   const isHD = (t) =>
     t["quality"].includes("720") || t["quality"].includes("1080");
   const gen_info = (m) => {
-    let source = `<a href="${m.url}">source (yts.mx)</a>`;
+    let source = `<a href="${m.url}">source (yts)</a>`;
     let imdb = `<a href="https://www.imdb.com/title/${m.imdb_code}/">IMDB (${m.rating})</a>`;
     let lbox = `<a href="https://letterboxd.com/imdb/${m.imdb_code}"/>Letterboxd</a>`;
 
