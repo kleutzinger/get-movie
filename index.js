@@ -37,7 +37,14 @@ async function get_torrent(magnet_url, dir_path, extra_options = {}) {
   const text = await r.text();
   console.log(r.status, r.statusText, text);
 
-  return text.includes('"success"') && r.ok;
+  // Return detailed result object
+  const success = text.includes('"success"') && r.ok;
+  return {
+    success,
+    status: r.status,
+    statusText: r.statusText,
+    responseBody: text,
+  };
 }
 
 app.get("/", function (request, response) {
@@ -49,22 +56,44 @@ app.get("/empty", function (request, response) {
 });
 
 app.post("/post", async function (request, response, next) {
-  let extra_options = {};
-  if (request.body.label !== "no-label") {
-    extra_options["label"] = request.body.label;
+  try {
+    // Validate required fields
+    if (!request.body.magnet) {
+      return response.status(400).send("Missing required field: magnet");
+    }
+    if (!request.body.mediatype) {
+      return response.status(400).send("Missing required field: mediatype");
+    }
+
+    let extra_options = {};
+    if (request.body.label !== "no-label") {
+      extra_options["label"] = request.body.label;
+    }
+
+    let magnet = request.body.magnet;
+    // check if magnet is either a url or a magnet link
+    if (!magnet.startsWith("magnet:") && !magnet.startsWith("http")) {
+      return response.status(400).send("Invalid magnet link or url - must start with 'magnet:' or 'http'");
+    }
+
+    let result = await get_torrent(
+      magnet,
+      request.body.mediatype,
+      extra_options
+    );
+
+    if (result.success) {
+      response.status(200).send(`succesfully submitted ${magnet}`);
+    } else {
+      // Provide detailed error information
+      const errorMsg = `Failed to submit torrent. RuTorrent returned status ${result.status} (${result.statusText}). Response: ${result.responseBody}`;
+      console.error("Torrent submission failed:", errorMsg);
+      return response.status(400).send(errorMsg);
+    }
+  } catch (error) {
+    console.error("Error in /post endpoint:", error);
+    return response.status(500).send(`Internal server error: ${error.message}`);
   }
-  let magnet = request.body.magnet;
-  // check if magnet is either a url or a magnet link
-  if (!magnet.startsWith("magnet:") && !magnet.startsWith("http")) {
-    return response.status(400).send("Invalid magnet link or url");
-  }
-  let is_success = await get_torrent(
-    magnet,
-    request.body.mediatype,
-    extra_options
-  );
-  if (is_success) response.status(200).send(`succesfully submitted ${magnet}`);
-  else response.sendStatus(400);
 });
 
 // get available disk space from rutorrent
@@ -164,18 +193,39 @@ app.get("/rutorrent-url", async function (request, response, next) {
 });
 
 app.post("/yts", async function (request, response, next) {
-  let extra_options = {};
-  if (request.body.label && request.body.label !== "no-label") {
-    extra_options["label"] = request.body.label;
+  try {
+    // Validate required fields
+    if (!request.body.magnet) {
+      return response.status(400).send("Missing required field: magnet");
+    }
+    if (!request.body.mediatype) {
+      return response.status(400).send("Missing required field: mediatype");
+    }
+
+    let extra_options = {};
+    if (request.body.label && request.body.label !== "no-label") {
+      extra_options["label"] = request.body.label;
+    }
+
+    let magnet = request.body.magnet;
+    let result = await get_torrent(
+      magnet,
+      request.body.mediatype,
+      extra_options
+    );
+
+    if (result.success) {
+      response.status(200).send(`succesfully submitted ${magnet}`);
+    } else {
+      // Provide detailed error information
+      const errorMsg = `Failed to submit torrent. RuTorrent returned status ${result.status} (${result.statusText}). Response: ${result.responseBody}`;
+      console.error("Torrent submission failed:", errorMsg);
+      return response.status(400).send(errorMsg);
+    }
+  } catch (error) {
+    console.error("Error in /yts endpoint:", error);
+    return response.status(500).send(`Internal server error: ${error.message}`);
   }
-  let magnet = request.body.magnet;
-  let is_success = await get_torrent(
-    magnet,
-    request.body.mediatype,
-    extra_options
-  );
-  if (is_success) response.status(200).send(`succesfully submitted ${magnet}`);
-  else response.sendStatus(400);
 });
 
 app.listen(app.get("port"), function () {
