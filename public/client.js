@@ -36,17 +36,38 @@ function makeTable(data) {
   return table;
 }
 
-function autosubmit(t_url) {
+function autosubmit(t_url, hash, quality, type, movieTitle, movieUrl) {
   // populate and submit the post request form at the top of the page
   document.getElementById("magnet").value = t_url;
+
+  // Helper function to create or update hidden input
+  function setHiddenInput(id, name, value) {
+    let input = document.getElementById(id);
+    if (!input) {
+      input = document.createElement("input");
+      input.type = "hidden";
+      input.id = id;
+      input.name = name;
+      document.getElementById("main-form").appendChild(input);
+    }
+    input.value = value || "";
+  }
+
+  // Set all hidden fields
+  setHiddenInput("hash", "hash", hash);
+  setHiddenInput("quality", "quality", quality);
+  setHiddenInput("type", "type", type);
+  setHiddenInput("movieTitle", "movieTitle", movieTitle);
+  setHiddenInput("movieUrl", "movieUrl", movieUrl);
+
   let submit_button = document.querySelector("#submit");
   submit_button.click();
 }
 
-function torrent_to_button_html(torrent) {
+function torrent_to_button_html(torrent, movieTitle, movieUrl) {
   // turn a torrent dict into a download button in the table
-  const { quality, type, url, size } = torrent;
-  return `<button onClick ="autosubmit('${url}')">${[quality, type, size].join(
+  const { quality, type, url, hash, size } = torrent;
+  return `<button onClick ="autosubmit('${url}', '${hash}', '${quality}', '${type}', '${movieTitle}', '${movieUrl}')">${[quality, type, size].join(
     "<br>",
   )}</button>`;
 }
@@ -75,7 +96,7 @@ function transform_api_response(api_json) {
       title: m.title,
       torrents: torrents,
       year: m.year,
-      download: torrents.map(torrent_to_button_html).join(" "),
+      download: torrents.map(t => torrent_to_button_html(t, m.title, m.url)).join(" "),
       image: m.medium_cover_image,
       info: gen_info(m),
     };

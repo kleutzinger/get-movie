@@ -21,30 +21,82 @@ app.use("/snowfl", snowfl);
 async function get_torrent(magnet_url, dir_path, extra_options = {}) {
   // initiate a torrent download on a remote server
   let endpoint = `${rutorrent_url}/php/addtorrent.php`;
-  let body = {
-    url: magnet_url,
-    dir_edit: dir_path,
-    ...extra_options,
-  };
-  console.log("posting body:", body);
-  let r = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams(body),
-  });
-  const text = await r.text();
-  console.log(r.status, r.statusText, text);
 
-  // Return detailed result object
-  const success = text.includes('"success"') && r.ok;
-  return {
-    success,
-    status: r.status,
-    statusText: r.statusText,
-    responseBody: text,
-  };
+  // Check if it's an HTTP URL (torrent file download) vs magnet link
+  if (magnet_url.startsWith("http")) {
+    try {
+      console.log("Downloading torrent file from:", magnet_url);
+      // Download the torrent file first
+      const torrentResponse = await fetch(magnet_url);
+      if (!torrentResponse.ok) {
+        return {
+          success: false,
+          status: torrentResponse.status,
+          statusText: torrentResponse.statusText,
+          responseBody: `Failed to download torrent file from ${magnet_url}`,
+        };
+      }
+      const torrentBuffer = await torrentResponse.arrayBuffer();
+      const torrentBase64 = Buffer.from(torrentBuffer).toString('base64');
+
+      // Send the torrent file content to RuTorrent
+      let body = {
+        torrent_file: torrentBase64,
+        dir_edit: dir_path,
+        ...extra_options,
+      };
+      console.log("posting torrent file (base64 length:", torrentBase64.length, ")");
+      let r = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams(body),
+      });
+      const text = await r.text();
+      console.log(r.status, r.statusText, text);
+
+      const success = text.includes('"success"') && r.ok;
+      return {
+        success,
+        status: r.status,
+        statusText: r.statusText,
+        responseBody: text,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        status: 500,
+        statusText: "Internal Error",
+        responseBody: `Error downloading/processing torrent file: ${error.message}`,
+      };
+    }
+  } else {
+    // It's a magnet link, send it directly
+    let body = {
+      url: magnet_url,
+      dir_edit: dir_path,
+      ...extra_options,
+    };
+    console.log("posting body:", body);
+    let r = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams(body),
+    });
+    const text = await r.text();
+    console.log(r.status, r.statusText, text);
+
+    const success = text.includes('"success"') && r.ok;
+    return {
+      success,
+      status: r.status,
+      statusText: r.statusText,
+      responseBody: text,
+    };
+  }
 }
 
 app.get("/", function (request, response) {
@@ -54,6 +106,48 @@ app.get("/", function (request, response) {
 app.get("/empty", function (request, response) {
   response.send("");
 });
+
+async function get_yts_trackers(movie_url) {
+  // Fetch the YTS movie page and extract tracker list from any magnet link
+  try {
+    console.log(`Fetching YTS page for trackers: ${movie_url}`);
+    const pageResponse = await fetch(movie_url);
+    if (!pageResponse.ok) {
+      throw new Error(`Failed to fetch YTS page: ${pageResponse.status} ${pageResponse.statusText}`);
+    }
+    const html = await pageResponse.text();
+
+    // Extract first magnet link from the page
+    const magnetRegex = /magnet:\?[^"'\s]+/;
+    const magnetMatch = html.match(magnetRegex);
+
+    if (!magnetMatch) {
+      throw new Error("No magnet links found on YTS page");
+    }
+
+    const magnetLink = magnetMatch[0];
+
+    // Extract all tracker URLs from the magnet link
+    const trackers = [];
+    const trackerRegex = /tr=([^&]+)/g;
+    let match;
+    while ((match = trackerRegex.exec(magnetLink)) !== null) {
+      trackers.push(decodeURIComponent(match[1]));
+    }
+
+    console.log(`Extracted ${trackers.length} trackers from YTS page`);
+    return trackers;
+  } catch (error) {
+    throw new Error(`Failed to extract trackers: ${error.message}`);
+  }
+}
+
+function construct_magnet_link(hash, display_name, trackers) {
+  // Construct a magnet link from hash, display name, and tracker list
+  const dn = encodeURIComponent(display_name);
+  const trackerParams = trackers.map(t => `tr=${encodeURIComponent(t)}`).join('&');
+  return `magnet:?xt=urn:btih:${hash}&dn=${dn}&${trackerParams}`;
+}
 
 app.post("/post", async function (request, response, next) {
   try {
@@ -71,8 +165,28 @@ app.post("/post", async function (request, response, next) {
     }
 
     let magnet = request.body.magnet;
-    // check if magnet is either a url or a magnet link
-    if (!magnet.startsWith("magnet:") && !magnet.startsWith("http")) {
+
+    // Check if this is a YTS torrent download URL
+    if (magnet.includes("yts.lt/torrent/download/")) {
+      // Extract hash, quality, type, movie title, and movie URL from request
+      const hash = request.body.hash;
+      const quality = request.body.quality;
+      const type = request.body.type;
+      const movieTitle = request.body.movieTitle;
+      const movieUrl = request.body.movieUrl;
+
+      if (!hash || !quality || !type || !movieTitle || !movieUrl) {
+        return response.status(400).send("YTS torrents require hash, quality, type, movieTitle, and movieUrl fields");
+      }
+
+      // Fetch trackers from the YTS page
+      const trackers = await get_yts_trackers(movieUrl);
+
+      // Construct magnet link from hash and trackers
+      const displayName = `${movieTitle} ${quality} ${type}`;
+      magnet = construct_magnet_link(hash, displayName, trackers);
+      console.log("Constructed magnet link:", magnet);
+    } else if (!magnet.startsWith("magnet:") && !magnet.startsWith("http")) {
       return response.status(400).send("Invalid magnet link or url - must start with 'magnet:' or 'http'");
     }
 
