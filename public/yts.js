@@ -1,7 +1,7 @@
 // example:
 // https://github.com/kleutzinger/dotfiles/blob/1486dc19a6522cb806302125eb3518d969a86417/scripts/movie_api.py#L37
 
-const YTS_HOME = "https://yts.lt";
+const YTS_HOME = "https://yts.bz";
 const SEARCH_ENDPOINT = `${YTS_HOME}/api/v2/list_movies.json`;
 async function search_yts(fetch, query_term, is_rand_page) {
   const page = is_rand_page ? parseInt(Math.random() * 100) : 1;
