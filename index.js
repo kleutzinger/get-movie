@@ -301,25 +301,6 @@ app.get("/tmdb-poster", async function (request, response) {
   }
 });
 
-app.get("/proxy-image", async function (request, response) {
-  const url = request.query.url;
-  if (!url || !url.startsWith("https://yts.")) {
-    return response.status(400).send("Invalid image URL");
-  }
-  try {
-    const imgResponse = await fetch(url);
-    if (!imgResponse.ok) {
-      return response.status(imgResponse.status).send("Failed to fetch image");
-    }
-    const contentType = imgResponse.headers.get("content-type") || "image/jpeg";
-    response.set("Content-Type", contentType);
-    response.set("Cache-Control", "public, max-age=86400");
-    imgResponse.body.pipe(response);
-  } catch (error) {
-    response.status(500).send("Image proxy error");
-  }
-});
-
 app.post("/yts", async function (request, response, next) {
   try {
     // Validate required fields
