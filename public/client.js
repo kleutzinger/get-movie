@@ -97,7 +97,7 @@ function transform_api_response(api_json) {
       torrents: torrents,
       year: m.year,
       download: torrents.map(t => torrent_to_button_html(t, m.title, m.url)).join(" "),
-      image: m.medium_cover_image,
+      image: `/tmdb-poster?imdb_id=${m.imdb_code}`,
       info: gen_info(m),
     };
   });

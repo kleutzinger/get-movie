@@ -10,6 +10,7 @@ var app = express();
 // create application/json parser
 var bodyParser = require("body-parser");
 var rutorrent_url = process.env.RUTORRENT_URL;
+const TMDB_KEY = process.env.TMDB_KEY;
 
 app.set("port", process.env.PORT || 5000);
 app.use(express.static(__dirname + "/public"));
@@ -279,6 +280,44 @@ app.get("/dl-status", async function (request, response) {
 
 app.get("/rutorrent-url", async function (request, response, next) {
   response.json({ url: rutorrent_url });
+});
+
+app.get("/tmdb-poster", async function (request, response) {
+  const imdb_id = request.query.imdb_id;
+  if (!imdb_id || !TMDB_KEY) {
+    return response.status(400).send("Missing imdb_id or TMDB_KEY not configured");
+  }
+  try {
+    const url = `https://api.themoviedb.org/3/find/${imdb_id}?external_source=imdb_id&api_key=${TMDB_KEY}`;
+    const tmdbResp = await fetch(url);
+    const data = await tmdbResp.json();
+    const movie = data.movie_results?.[0];
+    if (!movie?.poster_path) {
+      return response.status(404).send("No poster found");
+    }
+    return response.redirect(`https://image.tmdb.org/t/p/w185${movie.poster_path}`);
+  } catch (error) {
+    return response.status(500).send("TMDB lookup error");
+  }
+});
+
+app.get("/proxy-image", async function (request, response) {
+  const url = request.query.url;
+  if (!url || !url.startsWith("https://yts.")) {
+    return response.status(400).send("Invalid image URL");
+  }
+  try {
+    const imgResponse = await fetch(url);
+    if (!imgResponse.ok) {
+      return response.status(imgResponse.status).send("Failed to fetch image");
+    }
+    const contentType = imgResponse.headers.get("content-type") || "image/jpeg";
+    response.set("Content-Type", contentType);
+    response.set("Cache-Control", "public, max-age=86400");
+    imgResponse.body.pipe(response);
+  } catch (error) {
+    response.status(500).send("Image proxy error");
+  }
 });
 
 app.post("/yts", async function (request, response, next) {
