@@ -107,40 +107,18 @@ app.get("/empty", function (request, response) {
   response.send("");
 });
 
-async function get_yts_trackers(movie_url) {
-  // Fetch the YTS movie page and extract tracker list from any magnet link
-  try {
-    console.log(`Fetching YTS page for trackers: ${movie_url}`);
-    const pageResponse = await fetch(movie_url);
-    if (!pageResponse.ok) {
-      throw new Error(`Failed to fetch YTS page: ${pageResponse.status} ${pageResponse.statusText}`);
-    }
-    const html = await pageResponse.text();
-
-    // Extract first magnet link from the page
-    const magnetRegex = /magnet:\?[^"'\s]+/;
-    const magnetMatch = html.match(magnetRegex);
-
-    if (!magnetMatch) {
-      throw new Error("No magnet links found on YTS page");
-    }
-
-    const magnetLink = magnetMatch[0];
-
-    // Extract all tracker URLs from the magnet link
-    const trackers = [];
-    const trackerRegex = /tr=([^&]+)/g;
-    let match;
-    while ((match = trackerRegex.exec(magnetLink)) !== null) {
-      trackers.push(decodeURIComponent(match[1]));
-    }
-
-    console.log(`Extracted ${trackers.length} trackers from YTS page`);
-    return trackers;
-  } catch (error) {
-    throw new Error(`Failed to extract trackers: ${error.message}`);
-  }
-}
+const DEFAULT_TRACKERS = [
+  "udp://tracker.opentrackr.org:1337/announce",
+  "udp://tracker.torrent.eu.org:451/announce",
+  "udp://tracker.dler.org:6969/announce",
+  "udp://open.stealth.si:80/announce",
+  "udp://open.demonii.com:1337/announce",
+  "https://tracker.moeblog.cn:443/announce",
+  "udp://open.dstud.io:6969/announce",
+  "udp://tracker.srv00.com:6969/announce",
+  "https://tracker.zhuqiy.com:443/announce",
+  "https://tracker.pmman.tech:443/announce",
+];
 
 function construct_magnet_link(hash, display_name, trackers) {
   // Construct a magnet link from hash, display name, and tracker list
@@ -175,16 +153,13 @@ app.post("/post", async function (request, response, next) {
       const movieTitle = request.body.movieTitle;
       const movieUrl = request.body.movieUrl;
 
-      if (!hash || !quality || !type || !movieTitle || !movieUrl) {
-        return response.status(400).send("YTS torrents require hash, quality, type, movieTitle, and movieUrl fields");
+      if (!hash || !quality || !type || !movieTitle) {
+        return response.status(400).send("YTS torrents require hash, quality, type, and movieTitle fields");
       }
-
-      // Fetch trackers from the YTS page
-      const trackers = await get_yts_trackers(movieUrl);
 
       // Construct magnet link from hash and trackers
       const displayName = `${movieTitle} ${quality} ${type}`;
-      magnet = construct_magnet_link(hash, displayName, trackers);
+      magnet = construct_magnet_link(hash, displayName, DEFAULT_TRACKERS);
       console.log("Constructed magnet link:", magnet);
     } else if (!magnet.startsWith("magnet:") && !magnet.startsWith("http")) {
       return response.status(400).send("Invalid magnet link or url - must start with 'magnet:' or 'http'");
