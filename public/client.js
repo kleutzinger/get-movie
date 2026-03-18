@@ -38,6 +38,8 @@ function makeTable(data) {
 
 function autosubmit(t_url, hash, quality, type, movieTitle, movieUrl) {
   // populate and submit the post request form at the top of the page
+  movieTitle = decodeURIComponent(movieTitle);
+  movieUrl = decodeURIComponent(movieUrl);
   document.getElementById("magnet").value = t_url;
 
   // Helper function to create or update hidden input
@@ -67,7 +69,9 @@ function autosubmit(t_url, hash, quality, type, movieTitle, movieUrl) {
 function torrent_to_button_html(torrent, movieTitle, movieUrl) {
   // turn a torrent dict into a download button in the table
   const { quality, type, url, hash, size } = torrent;
-  return `<button onClick ="autosubmit('${url}', '${hash}', '${quality}', '${type}', '${movieTitle}', '${movieUrl}')">${[quality, type, size].join(
+  const safeTitle = encodeURIComponent(movieTitle);
+  const safeMovieUrl = encodeURIComponent(movieUrl);
+  return `<button onClick ="autosubmit('${url}', '${hash}', '${quality}', '${type}', '${safeTitle}', '${safeMovieUrl}')">${[quality, type, size].join(
     "<br>",
   )}</button>`;
 }
