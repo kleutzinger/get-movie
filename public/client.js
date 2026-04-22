@@ -100,6 +100,7 @@ function transform_api_response(api_json) {
       title: m.title,
       torrents: torrents,
       year: m.year,
+      runtime: m.runtime,
       download: torrents.map(t => torrent_to_button_html(t, m.title, m.url)).join(" "),
       image: `/tmdb-poster?imdb_id=${m.imdb_code}`,
       info: gen_info(m),
