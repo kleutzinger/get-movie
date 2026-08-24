@@ -198,10 +198,33 @@ document.addEventListener("DOMContentLoaded", async function (event) {
   set_disk_space_in_ui(await get_disk_space_from_server());
 });
 
+function showScrollToProgressToast() {
+  let toast = document.getElementById("progress-toast");
+  if (!toast) {
+    toast = document.createElement("button");
+    toast.id = "progress-toast";
+    toast.style.cssText =
+      "position:fixed;bottom:20px;right:20px;background:#222;color:#fff;padding:12px 16px;border-radius:8px;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.3);z-index:1000;cursor:pointer;font-size:14px;";
+    toast.onclick = function () {
+      document
+        .getElementById("dl-status")
+        .scrollIntoView({ behavior: "smooth", block: "center" });
+      toast.remove();
+    };
+    document.body.appendChild(toast);
+  }
+  toast.textContent = "Download started - click to see progress ↑";
+  clearTimeout(toast._hideTimer);
+  toast._hideTimer = setTimeout(() => toast.remove(), 8000);
+}
+
 document.body.addEventListener("htmx:afterRequest", function (evt) {
   const targetError = evt.target.attributes.getNamedItem("hx-target-error");
   if (evt.detail.failed && targetError) {
     document.getElementById(targetError.value).style.display = "inline";
+  }
+  if (evt.target.id === "main-form" && evt.detail.successful) {
+    showScrollToProgressToast();
   }
 });
 document.body.addEventListener("htmx:beforeRequest", function (evt) {

@@ -281,11 +281,14 @@ app.get("/dl-status", async function (request, response) {
     ]);
     // most recently added torrents are at the end of the list
     const recent = rows.slice(-limit).reverse();
+    let hasActiveDownload = false;
     const content = recent
       .map(([name, size, downloaded]) => {
         const sizeGB = (size / 1000000000).toFixed(2);
         const percent = size > 0 ? Math.min(100, (downloaded / size) * 100) : 0;
-        const dlStatus = percent >= 100 ? "Done" : `${percent.toFixed(1)}%`;
+        const done = percent >= 100;
+        if (!done) hasActiveDownload = true;
+        const dlStatus = done ? "Done" : `${percent.toFixed(1)}%`;
 
         return `<tr>
               <td>${name.substring(0, 40)}</td>
@@ -295,15 +298,19 @@ app.get("/dl-status", async function (request, response) {
       })
       .join("\n");
 
-    const htmlTable = `<table>
+    // poll faster while something is actively downloading
+    const pollInterval = hasActiveDownload ? "5s" : "20s";
+    const html = `<div id="dl-status" hx-get="/dl-status?limit=${limit}" hx-trigger="load, every ${pollInterval}, click, dl-status-refresh from:body delay:2s" hx-swap="morph:outerHTML" hx-indicator="#spinner-dl" hx-target-500="#dl-status">
+                    <table>
                     <tr>
                       <th>Name</th>
                       <th>Size</th>
                       <th>Progress</th>
                     </tr>
                     ${content}
-                  </table>`;
-    response.send(htmlTable);
+                  </table>
+                  </div>`;
+    response.send(html);
   } catch (error) {
     console.error(error);
     response.status(500).send("Internal Server Error");
