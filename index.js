@@ -180,6 +180,7 @@ app.post("/post", async function (request, response, next) {
     );
 
     if (result.success) {
+      response.set("HX-Trigger", "dl-status-refresh");
       response.status(200).send(`succesfully submitted ${magnet}`);
     } else {
       // Provide detailed error information
@@ -215,6 +216,7 @@ app.post("/post-file", upload.single("torrentfile"), async function (request, re
     );
 
     if (result.success) {
+      response.set("HX-Trigger", "dl-status-refresh");
       response.status(200).send(`succesfully submitted ${request.file.originalname}`);
     } else {
       const errorMsg = `Failed to submit torrent file. RuTorrent returned status ${result.status} (${result.statusText}). Response: ${result.responseBody}`;
@@ -240,61 +242,50 @@ app.get("/diskspace", async function (request, response) {
   }
 });
 
-const exampleResponse = `
-{"items": [
-    {
-      "action": 2,
-      "name": "RCT2_Deluxe_Plus_OpenRCT2.iso",
-      "size": 606732288,
-      "downloaded": 606732288,
-      "uploaded": 0,
-      "ratio": 0,
-      "creation": 0,
-      "added": 1701039458,
-      "finished": 1701039502,
-      "tracker": "udp://a.bc.d:6969/announce",
-      "label": "kevin",
-      "action_time": 1701039502,
-      "hash": "f1ca51f4afa47f5bed33bf7102952105"
-    }, {}
-]}
+// rtorrent's own "main" view lists torrents in insertion order, so the most
+// recently added torrents are the last entries - unlike the rutorrent
+// history plugin (which logs add/finish/delete events separately and, on
+// this seedbox, has stopped recording new events entirely).
+async function rtorrent_multicall(view, fields) {
+  const endpoint = `${rutorrent_url}/plugins/httprpc/action.php`;
+  const paramsXml = [view, ...fields]
+    .map((p) => `<param><value><string>${p}</string></value></param>`)
+    .join("");
+  const body = `<?xml version="1.0"?><methodCall><methodName>d.multicall2</methodName><params><param><value><string></string></value></param>${paramsXml}</params></methodCall>`;
+  const r = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "text/xml" },
+    body,
+  });
+  const xml = await r.text();
+  const values = [];
+  const regex = /<value><(string|i4|i8|int)>([^<]*)<\/\1><\/value>/g;
+  let match;
+  while ((match = regex.exec(xml)) !== null) {
+    values.push(match[1] === "string" ? match[2] : parseInt(match[2], 10));
+  }
+  const rows = [];
+  for (let i = 0; i < values.length; i += fields.length) {
+    rows.push(values.slice(i, i + fields.length));
+  }
+  return rows;
+}
 
-`;
 app.get("/dl-status", async function (request, response) {
   try {
     const limit = request.query.limit || 5;
-    const endpoint = `${rutorrent_url}/plugins/history/action.php?cmd=get&mark=0`;
-    const result = await fetch(endpoint);
-    const data = await result.json();
-    const sortedData = data.items
-      .sort((a, b) => b.added - a.added)
-      .sort((a, b) => b.action_time - a.action_time);
-    // keep only the most recent items by unique name
-    const uniqueNames = new Set();
-    const deletedNames = new Set();
-    const uniqueData = [];
-    for (const item of sortedData) {
-      if (item.action === 3) {
-        deletedNames.add(item.name);
-      }
-      if (!uniqueNames.has(item.name)) {
-        if (deletedNames.has(item.name)) {
-          continue;
-        }
-        uniqueNames.add(item.name);
-        uniqueData.push(item);
-      }
-    }
-    const content = uniqueData
-      .slice(0, limit)
-      .map((item) => {
-        const { name, size, downloaded, added, finished, hash } = item;
-        const shortHash = hash.substring(0, 8);
+    const rows = await rtorrent_multicall("main", [
+      "d.name=",
+      "d.size_bytes=",
+      "d.bytes_done=",
+    ]);
+    // most recently added torrents are at the end of the list
+    const recent = rows.slice(-limit).reverse();
+    const content = recent
+      .map(([name, size, downloaded]) => {
         const sizeGB = (size / 1000000000).toFixed(2);
-        const dlStatus = finished == 0 ? "Started" : "Done";
-
-        // Calculate downloaded vs size percent
-        const downloadPercent = ((downloaded / size) * 100).toFixed(2);
+        const percent = size > 0 ? Math.min(100, (downloaded / size) * 100) : 0;
+        const dlStatus = percent >= 100 ? "Done" : `${percent.toFixed(1)}%`;
 
         return `<tr>
               <td>${name.substring(0, 40)}</td>
@@ -308,7 +299,7 @@ app.get("/dl-status", async function (request, response) {
                     <tr>
                       <th>Name</th>
                       <th>Size</th>
-                      <th>DL Status</th>
+                      <th>Progress</th>
                     </tr>
                     ${content}
                   </table>`;
@@ -365,6 +356,7 @@ app.post("/yts", async function (request, response, next) {
     );
 
     if (result.success) {
+      response.set("HX-Trigger", "dl-status-refresh");
       response.status(200).send(`succesfully submitted ${magnet}`);
     } else {
       // Provide detailed error information
