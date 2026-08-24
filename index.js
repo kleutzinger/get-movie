@@ -5,12 +5,14 @@ const fetch = (...args) =>
 var express = require("express");
 var cors = require("cors");
 var emojiFavicon = require("emoji-favicon");
+var multer = require("multer");
 const snowfl = require("./snowfl");
 var app = express();
 // create application/json parser
 var bodyParser = require("body-parser");
 var rutorrent_url = process.env.RUTORRENT_URL;
 const TMDB_KEY = process.env.TMDB_KEY;
+const upload = multer({ storage: multer.memoryStorage() });
 
 app.set("port", process.env.PORT || 5000);
 app.use(express.static(__dirname + "/public"));
@@ -18,6 +20,34 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors());
 app.use(emojiFavicon("cinema"));
 app.use("/snowfl", snowfl);
+
+async function post_torrent_file_base64(torrentBase64, dir_path, extra_options = {}) {
+  // send a base64-encoded .torrent file to rutorrent
+  let endpoint = `${rutorrent_url}/php/addtorrent.php`;
+  let body = {
+    torrent_file: torrentBase64,
+    dir_edit: dir_path,
+    ...extra_options,
+  };
+  console.log("posting torrent file (base64 length:", torrentBase64.length, ")");
+  let r = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams(body),
+  });
+  const text = await r.text();
+  console.log(r.status, r.statusText, text);
+
+  const success = text.includes('"success"') && r.ok;
+  return {
+    success,
+    status: r.status,
+    statusText: r.statusText,
+    responseBody: text,
+  };
+}
 
 async function get_torrent(magnet_url, dir_path, extra_options = {}) {
   // initiate a torrent download on a remote server
@@ -40,30 +70,7 @@ async function get_torrent(magnet_url, dir_path, extra_options = {}) {
       const torrentBuffer = await torrentResponse.arrayBuffer();
       const torrentBase64 = Buffer.from(torrentBuffer).toString('base64');
 
-      // Send the torrent file content to RuTorrent
-      let body = {
-        torrent_file: torrentBase64,
-        dir_edit: dir_path,
-        ...extra_options,
-      };
-      console.log("posting torrent file (base64 length:", torrentBase64.length, ")");
-      let r = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams(body),
-      });
-      const text = await r.text();
-      console.log(r.status, r.statusText, text);
-
-      const success = text.includes('"success"') && r.ok;
-      return {
-        success,
-        status: r.status,
-        statusText: r.statusText,
-        responseBody: text,
-      };
+      return await post_torrent_file_base64(torrentBase64, dir_path, extra_options);
     } catch (error) {
       return {
         success: false,
@@ -182,6 +189,40 @@ app.post("/post", async function (request, response, next) {
     }
   } catch (error) {
     console.error("Error in /post endpoint:", error);
+    return response.status(500).send(`Internal server error: ${error.message}`);
+  }
+});
+
+app.post("/post-file", upload.single("torrentfile"), async function (request, response) {
+  try {
+    if (!request.file) {
+      return response.status(400).send("Missing required field: torrentfile");
+    }
+    if (!request.body.mediatype) {
+      return response.status(400).send("Missing required field: mediatype");
+    }
+
+    let extra_options = {};
+    if (request.body.label && request.body.label !== "no-label") {
+      extra_options["label"] = request.body.label;
+    }
+
+    const torrentBase64 = request.file.buffer.toString("base64");
+    let result = await post_torrent_file_base64(
+      torrentBase64,
+      request.body.mediatype,
+      extra_options
+    );
+
+    if (result.success) {
+      response.status(200).send(`succesfully submitted ${request.file.originalname}`);
+    } else {
+      const errorMsg = `Failed to submit torrent file. RuTorrent returned status ${result.status} (${result.statusText}). Response: ${result.responseBody}`;
+      console.error("Torrent file submission failed:", errorMsg);
+      return response.status(400).send(errorMsg);
+    }
+  } catch (error) {
+    console.error("Error in /post-file endpoint:", error);
     return response.status(500).send(`Internal server error: ${error.message}`);
   }
 });

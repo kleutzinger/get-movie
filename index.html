@@ -97,6 +97,14 @@
         <input type="text" id="magnet" name="magnet" placeholder="manual magnet link here">
         <input type="submit" id="submit" value="Download torrent/magnet link" class="blue-text">
     </form>
+    <form id="upload-form" hx-post="/post-file" hx-encoding="multipart/form-data" hx-swap="innerHTML"
+        hx-target="#post-output" hx-indicator="#spinner-upload"
+        hx-vals='js:{mediatype: document.getElementById("mediatype").value, label: document.getElementById("label").value}'>
+        <h3>or upload a .torrent file directly</h3>
+        <input type="file" id="torrentfile" name="torrentfile" accept=".torrent" required>
+        <input type="submit" value="Upload torrent file" class="blue-text">
+        <img id="spinner-upload" class="htmx-indicator" src="/bars.svg" />
+    </form>
     <h3>or search torrent aggregator (via <a href="https://snowfl.com">snowfl.com</a>) or try <a href="https://btdig.com">btdig</a> manually</h3>
     <form hx-post="/snowfl"  hx-swap="innerHTML" hx-target="#snowfl-output" hx-indicator="#spinner" hx-target-500="#snowfl-output">
       <input required type="text" name="query" placeholder="search aggregator"></input>
