@@ -153,7 +153,7 @@ app.post("/post", async function (request, response, next) {
     let magnet = request.body.magnet;
 
     // Check if this is a YTS torrent download URL
-    if (magnet.includes("yts.gg/torrent/download/")) {
+    if (magnet.includes("/torrent/download/")) {
       // Extract hash, quality, type, movie title, and movie URL from request
       const hash = request.body.hash;
       const quality = request.body.quality;
